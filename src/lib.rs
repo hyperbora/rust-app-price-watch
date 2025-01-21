@@ -9,21 +9,21 @@ pub struct Parameters<'a> {
 #[serde(rename_all = "camelCase")]
 pub struct AppStoreResponse {
     pub result_count: u32,
-    pub results: Vec<AppDetails>,
+    pub results: Vec<AppDetail>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct AppDetails {
+pub struct AppDetail {
     pub track_view_url: String,
     pub price: f64,
     pub formatted_price: String,
 }
 
-pub async fn fetch_app_details(
+pub async fn fetch_app_detail(
     client: &Client,
     param: Parameters<'_>,
-) -> Result<AppDetails, Box<dyn std::error::Error>> {
+) -> Result<AppDetail, Box<dyn std::error::Error>> {
     let Parameters {
         app_id,
         country_code,
