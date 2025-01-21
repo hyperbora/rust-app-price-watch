@@ -23,7 +23,7 @@ pub struct AppDetails {
 pub async fn fetch_app_details(
     client: &Client,
     param: Parameters<'_>,
-) -> Result<AppStoreResponse, Box<dyn std::error::Error>> {
+) -> Result<AppDetails, Box<dyn std::error::Error>> {
     let Parameters {
         app_id,
         country_code,
@@ -41,5 +41,9 @@ pub async fn fetch_app_details(
         .json::<AppStoreResponse>()
         .await
         .map_err(|_| "Json parsing error")?;
-    Ok(app_store_response)
+    if app_store_response.result_count == 1 {
+        Ok(app_store_response.results.into_iter().next().unwrap())
+    } else {
+        Err("No results found".into())
+    }
 }
