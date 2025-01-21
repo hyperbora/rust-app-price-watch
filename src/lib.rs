@@ -16,8 +16,8 @@ pub struct AppStoreResponse {
 #[serde(rename_all = "camelCase")]
 pub struct AppDetail {
     pub track_view_url: String,
-    pub price: f64,
-    pub formatted_price: String,
+    pub price: Option<f64>,
+    pub formatted_price: Option<String>,
 }
 
 pub async fn fetch_app_detail(

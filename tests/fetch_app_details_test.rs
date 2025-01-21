@@ -11,5 +11,5 @@ async fn test_fetch_app_detail() {
 
     let client = Client::new();
     let detail = fetch_app_detail(&client, params).await;
-    assert!(detail.is_ok(), "API Error");
+    assert!(detail.is_ok(), "{}", detail.unwrap_err().to_string());
 }
