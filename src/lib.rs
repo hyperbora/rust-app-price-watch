@@ -1,39 +1,42 @@
-use reqwest::{Error, Response};
-use serde_json::Value;
-
-pub struct Parameters {
-    pub app_id: String,
-    pub country_code: String,
+use serde::Deserialize;
+pub struct Parameters<'a> {
+    pub app_id: &'a str,
+    pub country_code: &'a str,
 }
 
-pub async fn appstore_api(param: Parameters) -> Result<Value, Error> {
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AppStoreResponse {
+    pub result_count: u32,
+    pub results: Vec<AppDetails>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AppDetails {
+    pub track_view_url: String,
+    pub price: f64,
+    pub formatted_price: String,
+}
+
+pub async fn fetch_app_details(
+    param: Parameters<'_>,
+) -> Result<AppStoreResponse, Box<dyn std::error::Error>> {
     let Parameters {
         app_id,
         country_code,
     } = param;
-    let response: Response = reqwest::get(format!(
-        "https://itunes.apple.com/search?term={}&country={}&entity=software",
+    let response = reqwest::get(format!(
+        "https://itunes.apple.com/lookup?id={}&country={}",
         app_id, country_code
     ))
-    .await?;
+    .await
+    .map_err(|_| "Request failed")?
+    .text()
+    .await
+    .map_err(|_| "Failed to get text")?;
 
-    let json = response.json().await?;
-    Ok(json)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tokio;
-
-    #[tokio::test]
-    async fn test_appstore_api() {
-        let params = Parameters {
-            app_id: "id6502453075".to_string(),
-            country_code: "kr".to_string(),
-        };
-
-        let result = appstore_api(params).await;
-        assert!(result.is_ok());
-    }
+    let app_store_response: AppStoreResponse =
+        serde_json::from_str(&response).expect("Json Parsing Error");
+    Ok(app_store_response)
 }
