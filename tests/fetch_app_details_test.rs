@@ -4,10 +4,8 @@ use tokio;
 
 #[tokio::test]
 async fn test_fetch_app_detail() {
-    let params = Parameter {
-        app_id: "6502453075",
-        country_code: "us",
-    };
+    let url = "https://apps.apple.com/us/app/balatro/id6502453075";
+    let params = Parameter::from_url(url).expect("Failed to parse URL");
 
     let client = Client::new();
     let detail = fetch_app_detail(&client, params).await;
