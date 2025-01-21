@@ -1,3 +1,4 @@
+use reqwest::Client;
 use rust_app_price_watch::{fetch_app_details, Parameters};
 use tokio;
 
@@ -8,6 +9,7 @@ async fn test_fetch_app_details() {
         country_code: "us",
     };
 
-    let details = fetch_app_details(params).await;
+    let client = Client::new();
+    let details = fetch_app_details(&client, params).await;
     assert!(details.is_ok(), "API Error");
 }

@@ -1,3 +1,4 @@
+use reqwest::Client;
 use serde::Deserialize;
 pub struct Parameters<'a> {
     pub app_id: &'a str,
@@ -20,23 +21,25 @@ pub struct AppDetails {
 }
 
 pub async fn fetch_app_details(
+    client: &Client,
     param: Parameters<'_>,
 ) -> Result<AppStoreResponse, Box<dyn std::error::Error>> {
     let Parameters {
         app_id,
         country_code,
     } = param;
-    let response = reqwest::get(format!(
+    let url = format!(
         "https://itunes.apple.com/lookup?id={}&country={}",
         app_id, country_code
-    ))
-    .await
-    .map_err(|_| "Request failed")?
-    .text()
-    .await
-    .map_err(|_| "Failed to get text")?;
-
-    let app_store_response: AppStoreResponse =
-        serde_json::from_str(&response).expect("Json Parsing Error");
+    );
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|_| "Request failed")?;
+    let app_store_response = response
+        .json::<AppStoreResponse>()
+        .await
+        .map_err(|_| "Json parsing error")?;
     Ok(app_store_response)
 }
