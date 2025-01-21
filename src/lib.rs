@@ -1,8 +1,35 @@
+use regex::Regex;
 use reqwest::Client;
 use serde::Deserialize;
-pub struct Parameters<'a> {
+pub struct Parameter<'a> {
     pub app_id: &'a str,
     pub country_code: &'a str,
+}
+
+impl<'a> Parameter<'a> {
+    pub fn from_url(url: &'a str) -> Result<Self, String> {
+        let re = Regex::new(
+            r"https://apps\.apple\.com/(?P<country_code>\w{2})/app/.+/id(?P<app_id>\d+)",
+        )
+        .map_err(|_| "Invalid regex".to_string())?;
+        let caps = re
+            .captures(url)
+            .ok_or("URL does not match the expected format".to_string())?;
+
+        let country_code = caps
+            .name("country_code")
+            .ok_or("Country code not found".to_string())?
+            .as_str();
+        let app_id = caps
+            .name("app_id")
+            .ok_or("App ID not found".to_string())?
+            .as_str();
+
+        Ok(Parameter {
+            app_id,
+            country_code,
+        })
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -22,9 +49,9 @@ pub struct AppDetail {
 
 pub async fn fetch_app_detail(
     client: &Client,
-    param: Parameters<'_>,
+    param: Parameter<'_>,
 ) -> Result<AppDetail, Box<dyn std::error::Error>> {
-    let Parameters {
+    let Parameter {
         app_id,
         country_code,
     } = param;
