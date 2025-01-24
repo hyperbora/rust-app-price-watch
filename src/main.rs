@@ -1,20 +1,22 @@
-use dotenv;
+use dotenv::dotenv;
 use teloxide::prelude::*;
 use tokio;
 
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
+type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
-    dotenv::dotenv().ok();
+async fn main() -> HandlerResult {
+    dotenv().ok();
     pretty_env_logger::init();
     log::info!("Starting throw dice bot...");
 
     let bot = Bot::from_env();
 
-    teloxide::repl(bot, |u: UpdateWithCx<Bot, Message>| async move {
-        u.requester.send_dice(u.update.chat.id).send().await?;
-        Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+    teloxide::repl(bot, |cx: UpdateWithCx<Bot, Message>| async move {
+        if let Some(text) = cx.update.text() {
+            cx.answer(format!("You said: {}", text)).send().await?;
+        }
+        HandlerResult::Ok(())
     })
     .await;
 
